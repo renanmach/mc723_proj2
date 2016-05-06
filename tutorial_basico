@@ -7,4 +7,18 @@ Escalar sao os mais simples que executam um ou mais dados no maximo por vez
 
 -Hazards e bolhas 
 
-  a) 
+  a) Dados: Uma instrução precisa de um resultado que ainda não foi completamente calculado. ex:
+  add t1, t2, t3
+  add t5, t1, t4
+  O mecanismo para contornar isso é forwarding; Mandar o resultado da ALU assim que for computado.
+  O número de bolhas depende da distância entre as intruções e da quantidade de estágios entre o ponto em que o dado é
+  calculado e o ponto em que ele é requisitado.
+  
+  b) Estrutural: Acesso a memória leva mais de 1 ciclo (dado não está no registrador ainda) e atrasa o pipeline.
+  Mecanismo para contornar isso: caches
+  O número de bolhas depende dos cache misses.
+  
+  c) Controle: Um branch é executado e todo o progresso do pipeline deve ser descartado
+  Mecanismo: branch prediction
+  O número de bolhas depende do estágio em que o branch é tomado.
+  
