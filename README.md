@@ -3,9 +3,9 @@
 ##  Professor: *Lucas Wanner* 
 ##  Alunos:
 ## 	*Renato Toshiaki Shibata* *082674* 
-##   	*Rafael Faria Castelão* *  118439 *
-##   	*Renan Gomes Pereira* *  103927 *
-##   	*	Rodrigo de Sousa Serafim da Silva* *  	118607 *
+##   	*Rafael Faria Castelão* *118439*
+##   	*Renan Gomes Pereira* *103927*
+##   	*Rodrigo de Sousa Serafim da Silva* *118607*
 
 --> Coisas que precisamos aprender:
 	- configurar ArchC para detectar Hazards
@@ -37,3 +37,7 @@ Roteiro
 *	Branch Dinâmico: Utilizar uma tabela de 2 bits que contabiliza se houve ou não recentemente um branch, e armazenar essas informações para criar uma máquina de estados para gerar a previsão de branch ou não.
 
 ## Roteiro dos experimentos:
+
+
+
+	
