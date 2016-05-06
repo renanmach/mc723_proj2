@@ -22,3 +22,31 @@ Escalar sao os mais simples que executam um ou mais dados no maximo por vez
   Mecanismo: branch prediction
   O número de bolhas depende do estágio em que o branch é tomado.
   
+Branch Prediction:
+
+add $4, $5 ,$6
+beq $1,$2,40
+lw $3,300($0)
+
+## linha 40 = or $7,$8,$9
+
+- Prediction correct --> 0 bolhas
+
+- Prediction incorrect --> N bolhas
+
+Se não usar o branch prediction --> X bolhas 
+
+	--------------------------------------
+
+Static branch prediction:
+
+	a) se for branch para alguma linha atras 
+		=> branch taken
+	b) se for branch para alguma linha pra frente
+		=> branch not taken
+
+Dynamic Branch prediction:
+
+- Máquina de estados:
+
+	https://www.cs.umd.edu/class/fall2013/cmsc411-0201/lectures/lec09.pdf
