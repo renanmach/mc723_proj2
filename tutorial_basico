@@ -1,0 +1,10 @@
+TUTORIAL BASICO:
+
+-Superscalar x Escalar 
+Superscalar sao processadores que tem pipeline, que executam instruções em paralelo
+
+Escalar sao os mais simples que executam um ou mais dados no maximo por vez
+
+-Hazards e bolhas 
+
+  a) 
