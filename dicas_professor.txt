@@ -1,0 +1,100 @@
+Comentários para todos os grupos: 
+
+Hazards
+Antes de mais nada, identifiquem e listem todos os hazards a serem avaliados. Incluam uma descrição das condições em que cada hazard acontece nos seus
+ relatórios. Avaliarei os roteiros novamente após a aula de amanhã para verificar este item.  
+
+Ciclos por instrução:
+No exercício 3, usamos uma tabela estática de CPI. 
+Neste projeto, o CPI será computado de acordo com issue (escalar vs. superescalar), bolhas introduzidas devido a hazards, atraso no acesso à memória, e
+ atraso por branches. A ideia é que cada instrução agora levará 1 ciclo + atraso.
+
+O atraso para bolhas e issue pode ser calculado de acordo com os hazards.
+
+O atraso para branches vai depender do desempenho do branch predictor. Um branch previsto corretamente pode não ter atraso, enquanto um branch previsto 
+incorretamente tem atraso de N ciclos (encontrem N). Nos casos em que não se usa um branch predictor, todos os branches tem um atraso de X ciclos (encontrem X)
+
+O atraso no acesso à memória vai exigir o uso de um simulador como o Dinero. Depois de gerar os traces de acesso à memória e computar um número de ciclos base, 
+vocês podem adicionar um número de ciclos equivalente aos hits e misses na L1 e L2. Encontrem números razoáveis para estas penalidades e justifiquem a escolha.
+ Exemplo: cada hit na L1 aumenta 1 ciclo, cada miss na L2 aumenta 10 ciclos.
+
+Traces de memória:
+Apesar de simples, esta atividade exige estudo dos formatos aceitos pelo Dinero (ou outro simulador). Procurem antecipar. Os traces podem ser avaliados de forma 
+independente da contabilidade dos ciclos. Basta somar a penalidade de cada hit/miss aos números finais computados para cada configuração.  
+
+Escolha de parâmetros 
+Em alguns casos, vocês terão que escolher parâmetros para a avaliação, como por exemplo, o tempo de cada ciclo com vs. sem pipeline, ou atraso associado com misses 
+nas caches. Busquem parâmetros justificáveis na literatura ou baseados em hardware real.
+
+
+Grupo 1:
+Estratégica básica: não será possível avaliar hazard simplemente contando as instruções (flag -s): será necessário modificar o simulador e manter um histórico
+'para computar dependências entre instruções.
+
+Caches: definir configurações a testar
+
+Branch: comparar também com nenhum branch predictor
+
+Pipeline: não vai ser possível avaliar 5, 7, 13 em combinação com todos os outros testes. Fixem o pipeline em algum tamanho para avaliar hazards, etc.
+
+Hazards: identificar precisamente os hazards que não podem ser eliminados com forwarding.
+
+ 
+
+Grupo 2:
+Boa descrição da estratégia básica. Problemas de formatação no relatório
+
+Caches: definir as configurações a testar
+
+Branch: comparar também com nenhum branch predictor
+
+Pipeline: fixem um tamanho de pipeline para avaliar os hazards
+
+Hazards: identifiquem e listem todos os hazards a serem avaliados.
+
+ 
+ 
+Grupo 3:
+Caches: Mesmo tamanho L1 e L2? L2 deveria ser maior. Talvez focar em mais diversidade de tamanhos do que tamanho de bloco?
+
+Branch: comparar também com nenhum branch predictor
+
+Pipeline: plano ambicioso, vai ser excelente se completado. Considerem avaliar inicialmente com 5 estágios.
+
+Hazards: identifiquem e listem todos os hazards a serem avaliados.
+
+ 
+Grupo 4:
+ 
+
+Caches: L2 de 128K parece pequena.
+
+Branch: comparar também com nenhum branch predictor
+
+Pipeline: não vai ser possível avaliar 5, 7, 13 em combinação com todos os outros testes. Fixem o pipeline em algum tamanho para avaliar hazards, etc.
+
+Hazards: identifiquem e listem todos os hazards a serem avaliados.
+
+Grupo 5:
+ 
+
+Caches: talvez incluir um caso com L1=128 e não variar o numero de blocos?
+
+Branch: comparar também com nenhum branch predictor
+
+Pipeline: foco em 5 estágios OK
+
+Hazards: identifiquem e listem todos os hazards a serem avaliados.
+
+Grupo 6:
+ 
+
+Caches OK.
+
+Branch prediction: comparar também com nenhum branch predictor
+
+Pipeline: foco em 5 estágios OK
+
+Hazards: identifiquem e listem todos os hazards a serem avaliados.
+
+ 
