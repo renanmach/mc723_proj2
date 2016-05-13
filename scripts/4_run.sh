@@ -18,19 +18,19 @@ cd $MIPS_SIM_DIR;
 
 # patricia
 $MIPSX --load=$PATRICIA $BENCHMARKS/network/patricia/small.udp;
-if [ $? -eq 0 ]; then
+#if [ $? -eq 0 ]; then
     mv -f traces/trace.txt $DINERO/trace_patricia.txt;
-else
-    echo "Erro ao executar o mips para patricia!\n";
-fi
+#else
+    #echo "Erro ao executar o mips para patricia!\n";
+#fi
 
 #qsort
 $MIPSX --load=$QSORT $QSORT_DATA;
-if [ $? -eq 0 ]; then
+#if [ $? -eq 0 ]; then
     mv -f traces/trace.txt $DINERO/trace_qsort.txt;
-else
-    echo "Erro ao executar o mips para qsort!\n";
-fi
+#else
+    #echo "Erro ao executar o mips para qsort!\n";
+#fi
 
 #dijkstra
 $MIPSX --load=$DIJKSTRA $DIJKSTRA_DATA
