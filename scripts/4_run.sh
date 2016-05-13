@@ -14,6 +14,10 @@ export QSORT_DATA=$BENCHMARKS/automotive/qsort/input_large.dat
 export DIJKSTRA=$BENCHMARKS/network/dijkstra/dijkstra_large
 export DIJKSTRA_DATA=$BENCHMARKS/network/dijkstra/input.dat
 
+export PATH=$PATH:/home/renan/semestre_13/mc723/mc723_proj2/archc/build/bin/:/home/renan/semestre_13/mc723/mc723_proj2/mips_compiler/bin/;
+export LD_LIBRARY_PATH=/home/renan/semestre_13/mc723/mc723_proj2/systemc/build/lib-linux64:$LD_LIBRARY_PATH;
+export MIPS_SIM=/home/renan/semestre_13/mc723/mc723_proj2/mips-1.0.
+
 cd $MIPS_SIM_DIR;
 
 # patricia
@@ -39,5 +43,9 @@ if [ $? -eq 0 ]; then
 else
     echo "Erro ao executar o mips para dijkstra!\n";
 fi
+
+rm -f *.trace;
+
+echo "Saindo!\n";
 
 cd $curr_dir;
