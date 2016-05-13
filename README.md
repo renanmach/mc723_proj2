@@ -25,6 +25,17 @@
 *	Miss rate L1 e L2
 *	Branch prediction rate
 
+
+## **Pipeline**
+
+Todos os nossos experimentos e critérios avaliados serão feitos para pipelines de dois tamanhos diferentes:
+
+* 5 estágios
+* 7 estágios
+
+Modificaremos o código do simulador para avaliar os efeitos da pipeline para cada estágio escolhido.
+
+
 ## **Branch predictor**
 
 Utilizaremos as seguintes estratégias:
@@ -51,12 +62,7 @@ Utilizaremos o software dineroIV para medir os *misses* das caches L1 e L2. Modi
 Vamos comparar dois tipos de processadores:
 
 * Escalar
-* Superescalar:
-	* Todos os nossos experimentos e critérios avaliados serão feitos para pipelines de dois tamanhos diferentes:
-		* 5 estágios
-		* 7 estágios
-
-Modificaremos o código do simulador para avaliar os efeitos da pipeline para cada estágio escolhido.
+* Superescalar
 
 
 ## **Hazards**
