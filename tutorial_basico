@@ -46,7 +46,6 @@ D) MEM/WB
   		ex.: 	lw **$s0**, 20($t1)
   			sub $t2,**$so**,$t3
   
-  ##EDITAR POR FAVOR DAQUI PARA BAIXO:
   b)O número de bolhas depende dos cache misses.
 
   c)O número de bolhas depende do estágio em que o branch é tomado.
