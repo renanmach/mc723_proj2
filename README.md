@@ -145,7 +145,7 @@ Se não usar o branch prediction --> X bolhas
 
 Static branch prediction:
 
-### Realmente sempre não tomar o branch? ##
+Realmente sempre não tomar o branch???
 	a) se for branch para alguma linha atras 
 		=> branch taken
 	b) se for branch para alguma linha pra frente
@@ -154,7 +154,7 @@ Static branch prediction:
 Dynamic Branch prediction:
 
 - Máquina de estados:
-- incluir aki link para a figura da maquina de estados
+incluir aki link para a figura da maquina de estados
 - 
 ## **Experimentos**
 
