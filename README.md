@@ -178,10 +178,6 @@ Utilizaremos as seguintes configurações do processador MIPS:
 
 * *todas as medidas  serão feitas tanto para pipelines de 5 e 7 estágios.*
 
-	Cáluclo da CPI:
-	####o CPI será computado de acordo com issue (escalar vs. superescalar), bolhas introduzidas devido a hazards, atraso no acesso à memória, e
- atraso por branches
-
 	
 	
 
