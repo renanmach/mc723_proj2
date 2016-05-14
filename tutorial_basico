@@ -18,7 +18,7 @@ C) EX/MEM
 D) MEM/WB
 
 
--Hazards- conceitos
+-Hazards:conceitos
 
   a) Dados: Uma instrução precisa de um resultado que ainda não foi completamente calculado. ex:
   add t1, t2, t3
@@ -32,15 +32,17 @@ D) MEM/WB
   c) Controle: Um branch é executado e todo o progresso do pipeline deve ser descartado
   Mecanismo: branch prediction
   
-  
-  
+  ##################################################################
+  ###IMPORTANTE :: O PROFESSOR PEDE PARA POR ISSO NO RELATORIO
+  ###identifiquem e listem todos os hazards a serem avaliados. Incluam uma descrição das condições em que cada hazard acontece
+  #####################################################################
  -Lista de todos os hazards
   
   a)O número de bolhas depende da distância entre as intruções e da quantidade de estágios entre o ponto em que o dado é
   calculado e o ponto em que ele é requisitado.(???)
   
   	*R-type instructions: não há bolhas, usa-se forwarding
-	*Load-Store L-type instructions: 1 bolha <=> L-type instruction e em seguinda uma instrução que usa registrador de destino da linha anterior
+	*Load-Store L-type instructions: atraso de 1 bolha <=> L-type instruction e em seguinda uma instrução que usa registrador de destino da linha anterior
   		ex.: 	lw **$s0**, 20($t1)
   			sub $t2,**$so**,$t3
   
@@ -77,3 +79,7 @@ Dynamic Branch prediction:
 - Máquina de estados:
 
 	https://www.cs.umd.edu/class/fall2013/cmsc411-0201/lectures/lec09.pdf
+	
+	
+	Cáluclo da CPI:
+	
