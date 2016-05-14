@@ -40,8 +40,7 @@ Modificaremos o código do simulador para avaliar os efeitos da pipeline para ca
 
 Utilizaremos as seguintes estratégias:
 
-* Sem branch predictor
-* Branch estático: escolhemos sempre tomar o branch.
+* Branch estático: escolhemos sempre NÃO tomar o branch.
 * Branch dinâmico: 2-bit predictor. Cria uma máquina de estados e apenas muda a predição em duas predições errados consecutivas.
 
 ## **Cache**
@@ -63,6 +62,8 @@ Vamos comparar dois tipos de processadores:
 
 * Escalar
 * Superescalar
+
+A comparação será com base no número de ciclos que cada tipo de processador leva para executar os benchmarks.
 
 
 ## **Hazards**

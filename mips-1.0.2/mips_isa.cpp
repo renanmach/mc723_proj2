@@ -25,19 +25,96 @@
 #include  "mips_bhv_macros.H"
 
 
-// estados:
-// 0 Predict taken strong (ainda pode errar)
-// 1 Predict taken weak (no proximo erro ja troca)
-// 2 Predict not weak (ainda pode errar)
-// 3 Predict not taken strong (no proximo erro ja troca)
+/* ***************************************************************** */
+// Renan:
+
+// References
+// [1] Slides of the book "Computer Architecture and Design". Chapter 4
+// [2] http://www.ece.ucsb.edu/~strukov/ece154aFall2013/viewgraphs/pipelinedMIPS.pdf
+
+// GLOBAL VARIABLES
+
+// Number of cycles 
+unsigned long long CYCLES_SCALAR = 0; // pipeline 1 stage
+unsigned long long CYCLES_SCALAR_5 = 0;
+unsigned long long CYCLES_SCALAR_7 = 0;
+
+    // Scalar
+unsigned long long DYNAMIC_CYCLES_SCALAR = 0; // pipeline 1 stage
+unsigned long long DYNAMIC_CYCLES_SCALAR_5 = 0;
+unsigned long long DYNAMIC_CYCLES_SCALAR_7 = 0;
+
+unsigned long long STATIC_CYCLES_SCALAR = 0; // pipeline 1 stage
+unsigned long long STATIC_CYCLES_SCALAR_5 = 0;
+unsigned long long STATIC_CYCLES_SCALAR_7 = 0;
+
+    // Superscalar
+//unsigned long long CYCLES_SUPERSCALAR_5 = 0;
+//unsigned long long CYCLES_SUPERSCALAR_7 = 0
+
+
+// Number of instructions
+unsigned long long INSTRUCTIONS = 0;
+
+// Trace file (for dineroIV)
+ofstream file;
+
+// Result file
+ofstream fresults;
+
+// Branch predictiors
+
+    // Number of branches instructions
+unsigned long long NBRANCHES_INTR = 0;
+unsigned long long NJUMPS = 0;
+
+unsigned long long BRANCHES_TAKEN = 0;
+unsigned long long BRANCHES_NOT_TAKEN = 0;
+unsigned long long DYNAMIC_HITS = 0;
+unsigned long long DYNAMIC_MISSES = 0;
+unsigned long long STATIC_HITS = 0;
+unsigned long long STATIC_MISSES = 0;
+
+
+// Control hazards for pipelines of size 5 and 7
+unsigned long long DYNAMIC_CONTROL_HAZARDS_5 = 0;
+unsigned long long DYNAMIC_CONTROL_HAZARDS_7 = 0;
+unsigned long long STATIC_CONTROL_HAZARDS_5 = 0;
+unsigned long long STATIC_CONTROL_HAZARDS_7 = 0;
+
+
+// Bubbles
+// if the branch is taken and the prediction is right we will have a bubble
+// we are considering the case that the branch target is buffed when instruction is
+// fetched. [1] p. 93
+//#define NBUBBLES_RIGHT_PREDICT_BTAKEN 0
+
+// Branch occurs at the end of stage EX/MEM
+#define NBUBBLES_BRANCH_5 2
+
+// TODO (explanation)
+#define NBUBBLES_BRANCH_7 3
+
+// Same for all cases
+// Jumps are not decoded until ID 
+#define NBUBBLES_JUMP 1 
+
+
+
+// Branch Predictors
+
+// States:
+// 0 Predict taken strong (if miss, go to state 1, but keep the same prediction)
+// 1 Predict taken weak (if miss again, change prediction)
+// 2 Predict not weak (if miss, change prediction)
+// 3 Predict not taken strong (can miss once)
 
 class DynamicBranchPredictorTwoBits {
 private: 
     int currState;
     bool prediction;
     
-    // maquina de estados segundo o slide 92 do capitulo 4
-    // do livro "computer architecture and design"
+    // FSM. [1] p. 92
     void twoBitsFSM(bool taken) {
         if(currState == 0) {
             if(!taken) currState++;
@@ -63,13 +140,13 @@ public:
         return prediction;
     }
     
-    // construtor
+    // constructor
     DynamicBranchPredictorTwoBits() {
         prediction=true;
         currState=0;
     }
     
-    // atualiza o branch
+    // updates the prediction
     void updatePredict(bool taken) {
         twoBitsFSM(taken);
         if(currState >= 2)
@@ -81,12 +158,19 @@ public:
 };
 
 
-// Always taken
+// Always NOT taken
 class StaticBranchPredictor {
+public:
     bool getPrediction() {
-        return true;
+        return false;
     }
 };
+
+
+DynamicBranchPredictorTwoBits dynamicBP;
+StaticBranchPredictor staticBP;
+
+/* ***************************************************************** */
 
 //If you want debug information for this model, uncomment next line
 //#define DEBUG_MODEL
@@ -103,11 +187,6 @@ using namespace mips_parms;
 static int processors_started = 0;
 #define DEFAULT_STACK_SIZE (256*1024)
 
- 
-// renan: arquivo de traces
-ofstream file;
-
-
 //!Generic instruction behavior method.
 void ac_behavior( instruction )
 { 
@@ -118,9 +197,11 @@ void ac_behavior( instruction )
   npc = ac_pc + 4;
 #endif 
 
+/* ***************************************************************** */
  // renan:
  file << 2 << " " << std::hex <<((int) ac_pc) << "\n";
-
+ INSTRUCTIONS++;
+/* ***************************************************************** */
 };
  
 //! Instruction Format behavior methods.
@@ -133,6 +214,7 @@ void ac_behavior(begin)
 {
   // renan: abre o arquivo de traces
   file.open("/home/renan/semestre_13/mc723/mc723_proj2/mips-1.0.2/traces/trace.txt");
+  fresults.open("/home/renan/semestre_13/mc723/mc723_proj2/mips-1.0.2/results/result.txt");
   
   dbg_printf("@@@ begin behavior @@@\n");
   RB[0] = 0;
@@ -154,8 +236,78 @@ void ac_behavior(end)
 {
   dbg_printf("@@@ end behavior @@@\n");
   
-  // renan: fecha o arquivo de traces
+  /* ******************************************************* */
+  // RENAN:
+  
+  // XXX TODO: TEM QUE SUBTRAIR AS INSTRUCOES QUE OS BRANCH PREDICTIORS
+  // ACERTARAM!!
+  CYCLES_SCALAR += INSTRUCTIONS;
+  CYCLES_SCALAR_5 += INSTRUCTIONS;
+  CYCLES_SCALAR_7 += INSTRUCTIONS;
+  
+  
+  NBRANCHES_INTR = BRANCHES_NOT_TAKEN + BRANCHES_TAKEN;
+  
+  // calculates jumps control hazards
+  DYNAMIC_CONTROL_HAZARDS_5 += (NJUMPS*NBUBBLES_JUMP);
+  DYNAMIC_CONTROL_HAZARDS_7 += (NJUMPS*NBUBBLES_JUMP);
+  
+  DYNAMIC_CONTROL_HAZARDS_5 += (DYNAMIC_MISSES*NBUBBLES_BRANCH_5);
+  DYNAMIC_CONTROL_HAZARDS_7 += (DYNAMIC_MISSES*NBUBBLES_BRANCH_7);
+  
+  STATIC_CONTROL_HAZARDS_5 += (NJUMPS*NBUBBLES_JUMP);
+  STATIC_CONTROL_HAZARDS_7 += (NJUMPS*NBUBBLES_JUMP);
+  
+  STATIC_CONTROL_HAZARDS_5 += (STATIC_MISSES*NBUBBLES_BRANCH_5);
+  STATIC_CONTROL_HAZARDS_7 += (STATIC_MISSES*NBUBBLES_BRANCH_7);
+  
+  //adds them to the cycles
+  CYCLES_SCALAR += (NJUMPS*NBUBBLES_JUMP);
+  CYCLES_SCALAR_5 += (NJUMPS*NBUBBLES_JUMP);
+  CYCLES_SCALAR_7 += (NJUMPS*NBUBBLES_JUMP);
+  
+  // TODO .. somar os de dados (lembrando que tem hazard de dado pra
+  // branches tbm)
+  // Depois somar as cycles_scalar nas static_cycles e somar os controles
+  // de acordo com o BP
+  // fazer os hazards de dados
+  // CPI vai ser somado depois pq precisa de quantos misses deu na memoria
+  // e isso vai ser determinado pelo dineroIV
+
+  fresults << "INSTRUCTIONS," << INSTRUCTIONS << endl;
+  
+  fresults << "NBRANCHES_INTR," << NBRANCHES_INTR << endl;
+  fresults << "NJUMPS," << NJUMPS << endl;
+  fresults << "BRANCHES_TAKEN," << BRANCHES_TAKEN << endl;
+  fresults << "BRANCHES_NOT_TAKEN," << BRANCHES_NOT_TAKEN << endl;
+  
+  fresults << "DYNAMIC_HITS," << DYNAMIC_HITS << endl;
+  fresults << "DYNAMIC_MISSES," << DYNAMIC_MISSES << endl;
+  fresults << "STATIC_HITS," << STATIC_HITS << endl;
+  fresults << "STATIC_MISSES," << STATIC_MISSES << endl;
+  
+  fresults << "STATIC_RATIO (MISSES/TOTAL)," << (double) STATIC_MISSES/NBRANCHES_INTR << endl;
+  fresults << "DYNAMIC_RATIO (MISSES/TOTAL)," << (double) DYNAMIC_MISSES/NBRANCHES_INTR << endl;
+  
+  fresults << "STATIC_CONTROL_HAZARDS_5," << STATIC_CONTROL_HAZARDS_5 << endl;
+  fresults << "STATIC_CONTROL_HAZARDS_7," << STATIC_CONTROL_HAZARDS_7 << endl;
+  fresults << "DYNAMIC_CONTROL_HAZARDS_5," << DYNAMIC_CONTROL_HAZARDS_5 << endl;
+  fresults << "DYNAMIC_CONTROL_HAZARDS_7," << DYNAMIC_CONTROL_HAZARDS_7 << endl;
+  
+  
+  // Number of cycles
+  fresults << "STATIC_CYCLES_SCALAR," << STATIC_CYCLES_SCALAR << endl;
+  fresults << "STATIC_CYCLES_SCALAR_5," << STATIC_CYCLES_SCALAR_5 << endl;
+  fresults << "STATIC_CYCLES_SCALAR_7," << STATIC_CYCLES_SCALAR_7 << endl;
+  
+  fresults << "DYNAMIC_CYCLES_SCALAR," << DYNAMIC_CYCLES_SCALAR << endl;
+  fresults << "DYNAMIC_CYCLES_SCALAR_5," << DYNAMIC_CYCLES_SCALAR_5 << endl;
+  fresults << "DYNAMIC_CYCLES_SCALAR_7," << DYNAMIC_CYCLES_SCALAR_7 << endl;
+  
+  // renan: close traces and results files
   file.close();
+  fresults.close();
+  /* ******************************************************* */
 }
 
 
@@ -181,6 +333,7 @@ void ac_behavior( lbu )
   RB[rt] = byte ;
   dbg_printf("Result = %#x\n", RB[rt]);
   
+    // renan:
     file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
 };
 
@@ -202,6 +355,7 @@ void ac_behavior( lhu )
   RB[rt] = half ;
   dbg_printf("Result = %#x\n", RB[rt]);
   
+  // renan:
   file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
 };
 
@@ -212,6 +366,7 @@ void ac_behavior( lw )
   RB[rt] = DM.read(RB[rs]+ imm);
   dbg_printf("Result = %#x\n", RB[rt]);
   
+  // renan:
   file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
 };
 
@@ -230,7 +385,8 @@ void ac_behavior( lwl )
   RB[rt] = data;
   dbg_printf("Result = %#x\n", RB[rt]);
   
-    file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
+  // renan:
+  file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
 };
 
 //!Instruction lwr behavior method.
@@ -260,6 +416,7 @@ void ac_behavior( sb )
   DM.write_byte(RB[rs] + imm, byte);
   dbg_printf("Result = %#x\n", (int) byte);
   
+    // renan:
     file << 1 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
 };
 
@@ -272,7 +429,7 @@ void ac_behavior( sh )
   DM.write_half(RB[rs] + imm, half);
   dbg_printf("Result = %#x\n", (int) half);
   
-
+  // renan:
   file << 1 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
 };
 
@@ -301,7 +458,8 @@ void ac_behavior( swl )
   data |= DM.read(addr & 0xFFFFFFFC) & (0xFFFFFFFF << (32-offset));
   DM.write(addr & 0xFFFFFFFC, data);
   dbg_printf("Result = %#x\n", data);
-  
+   
+    // renan:
     file << 1 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
 };
 
@@ -320,6 +478,7 @@ void ac_behavior( swr )
   DM.write(addr & 0xFFFFFFFC, data);
   dbg_printf("Result = %#x\n", data);
   
+    // renan:
     file << 1 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
 };
 
@@ -662,6 +821,10 @@ void ac_behavior( j )
   npc =  (ac_pc & 0xF0000000) | addr;
 #endif 
   dbg_printf("Target = %#x\n", (ac_pc & 0xF0000000) | addr );
+  
+  
+  // renan: Control Hazard... add bubbles
+  NJUMPS++;
 };
 
 //!Instruction jal behavior method.
@@ -715,78 +878,198 @@ void ac_behavior( jalr )
 //!Instruction beq behavior method.
 void ac_behavior( beq )
 {
+  bool taken;
+  
   dbg_printf("beq r%d, r%d, %d\n", rt, rs, imm & 0xFFFF);
   if( RB[rs] == RB[rt] ){
 #ifndef NO_NEED_PC_UPDATE
     npc = ac_pc + (imm<<2);
 #endif 
     dbg_printf("Taken to %#x\n", ac_pc + (imm<<2));
-  }	
+        
+    // renan:
+    BRANCHES_TAKEN++;
+    taken = true;
+  }	  
+  
+  // renan:
+  else {
+       taken = false;
+       BRANCHES_NOT_TAKEN++;
+   }
+  
+  dynamicBP.updatePredict(taken);
+  
+  if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
+  else DYNAMIC_MISSES++;
+  
+  if(staticBP.getPrediction() == taken) STATIC_HITS++;
+  else STATIC_MISSES++;
 };
 
 //!Instruction bne behavior method.
 void ac_behavior( bne )
 {	
+  bool taken;
   dbg_printf("bne r%d, r%d, %d\n", rt, rs, imm & 0xFFFF);
   if( RB[rs] != RB[rt] ){
 #ifndef NO_NEED_PC_UPDATE
     npc = ac_pc + (imm<<2);
 #endif 
     dbg_printf("Taken to %#x\n", ac_pc + (imm<<2));
-  }	
+        
+    // renan:
+    BRANCHES_TAKEN++;
+    taken = true;
+  }	  
+  
+  // renan:
+  else {
+       taken = false;
+       BRANCHES_NOT_TAKEN++;
+   }
+  
+  dynamicBP.updatePredict(taken);
+  
+  if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
+  else DYNAMIC_MISSES++;
+  
+  if(staticBP.getPrediction() == taken) STATIC_HITS++;
+  else STATIC_MISSES++;
 };
 
 //!Instruction blez behavior method.
 void ac_behavior( blez )
 {
+  bool taken;
   dbg_printf("blez r%d, %d\n", rs, imm & 0xFFFF);
   if( (RB[rs] == 0 ) || (RB[rs]&0x80000000 ) ){
 #ifndef NO_NEED_PC_UPDATE
     npc = ac_pc + (imm<<2), 1;
 #endif 
     dbg_printf("Taken to %#x\n", ac_pc + (imm<<2));
-  }	
+        
+    // renan:
+    BRANCHES_TAKEN++;
+    taken = true;
+  }	  
+  
+  // renan:
+  else {
+       taken = false;
+       BRANCHES_NOT_TAKEN++;
+   }
+  
+  dynamicBP.updatePredict(taken);
+  
+  if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
+  else DYNAMIC_MISSES++;
+  
+  if(staticBP.getPrediction() == taken) STATIC_HITS++;
+  else STATIC_MISSES++;
+  
 };
 
 //!Instruction bgtz behavior method.
 void ac_behavior( bgtz )
 {
+  bool taken;
   dbg_printf("bgtz r%d, %d\n", rs, imm & 0xFFFF);
   if( !(RB[rs] & 0x80000000) && (RB[rs]!=0) ){
 #ifndef NO_NEED_PC_UPDATE
     npc = ac_pc + (imm<<2);
 #endif 
     dbg_printf("Taken to %#x\n", ac_pc + (imm<<2));
-  }	
+        
+    // renan:
+    BRANCHES_TAKEN++;
+    taken = true;
+  }	  
+  
+  // renan:
+  else {
+       taken = false;
+       BRANCHES_NOT_TAKEN++;
+   }
+  
+  dynamicBP.updatePredict(taken);
+  
+  if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
+  else DYNAMIC_MISSES++;
+  
+  if(staticBP.getPrediction() == taken) STATIC_HITS++;
+  else STATIC_MISSES++;
+  
 };
 
 //!Instruction bltz behavior method.
 void ac_behavior( bltz )
 {
+  bool taken;
   dbg_printf("bltz r%d, %d\n", rs, imm & 0xFFFF);
   if( RB[rs] & 0x80000000 ){
 #ifndef NO_NEED_PC_UPDATE
     npc = ac_pc + (imm<<2);
 #endif 
     dbg_printf("Taken to %#x\n", ac_pc + (imm<<2));
-  }	
+        
+    // renan:
+    BRANCHES_TAKEN++;
+    taken = true;
+  }	  
+  
+  // renan:
+  else {
+       taken = false;
+       BRANCHES_NOT_TAKEN++;
+   }
+  
+  dynamicBP.updatePredict(taken);
+  
+  if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
+  else DYNAMIC_MISSES++;
+  
+  if(staticBP.getPrediction() == taken) STATIC_HITS++;
+  else STATIC_MISSES++;
+  
 };
 
 //!Instruction bgez behavior method.
 void ac_behavior( bgez )
 {
+  bool taken;
   dbg_printf("bgez r%d, %d\n", rs, imm & 0xFFFF);
   if( !(RB[rs] & 0x80000000) ){
 #ifndef NO_NEED_PC_UPDATE
     npc = ac_pc + (imm<<2);
 #endif 
     dbg_printf("Taken to %#x\n", ac_pc + (imm<<2));
-  }	
+        
+    // renan:
+    BRANCHES_TAKEN++;
+    taken = true;
+  }	  
+  
+  // renan:
+  else {
+       taken = false;
+       BRANCHES_NOT_TAKEN++;
+   }
+  
+  dynamicBP.updatePredict(taken);
+  
+  if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
+  else DYNAMIC_MISSES++;
+  
+  if(staticBP.getPrediction() == taken) STATIC_HITS++;
+  else STATIC_MISSES++;
+  
 };
 
 //!Instruction bltzal behavior method.
 void ac_behavior( bltzal )
 {
+  bool taken;
   dbg_printf("bltzal r%d, %d\n", rs, imm & 0xFFFF);
   RB[Ra] = ac_pc+4; //ac_pc is pc+4, we need pc+8
   if( RB[rs] & 0x80000000 ){
@@ -794,13 +1077,33 @@ void ac_behavior( bltzal )
     npc = ac_pc + (imm<<2);
 #endif 
     dbg_printf("Taken to %#x\n", ac_pc + (imm<<2));
-  }	
+        
+    // renan:
+    BRANCHES_TAKEN++;
+    taken = true;
+  }	  
+  
+  // renan:
+  else {
+       taken = false;
+       BRANCHES_NOT_TAKEN++;
+   }
+  
+  dynamicBP.updatePredict(taken);
+  
+  if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
+  else DYNAMIC_MISSES++;
+  
+  if(staticBP.getPrediction() == taken) STATIC_HITS++;
+  else STATIC_MISSES++;
+  
   dbg_printf("Return = %#x\n", ac_pc+4);
 };
 
 //!Instruction bgezal behavior method.
 void ac_behavior( bgezal )
 {
+  bool taken;
   dbg_printf("bgezal r%d, %d\n", rs, imm & 0xFFFF);
   RB[Ra] = ac_pc+4; //ac_pc is pc+4, we need pc+8
   if( !(RB[rs] & 0x80000000) ){
@@ -808,7 +1111,26 @@ void ac_behavior( bgezal )
     npc = ac_pc + (imm<<2);
 #endif 
     dbg_printf("Taken to %#x\n", ac_pc + (imm<<2));
-  }	
+    
+    // renan:
+    BRANCHES_TAKEN++;
+    taken = true;
+  }	  
+  
+  // renan:
+  else {
+       taken = false;
+       BRANCHES_NOT_TAKEN++;
+   }
+  
+  dynamicBP.updatePredict(taken);
+  
+  if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
+  else DYNAMIC_MISSES++;
+  
+  if(staticBP.getPrediction() == taken) STATIC_HITS++;
+  else STATIC_MISSES++;
+  
   dbg_printf("Return = %#x\n", ac_pc+4);
 };
 
