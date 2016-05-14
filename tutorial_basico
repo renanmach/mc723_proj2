@@ -1,26 +1,55 @@
+
 TUTORIAL BASICO:
 
 -Superscalar x Escalar 
-Superscalar sao processadores que tem pipeline, que executam instruções em paralelo
+Superscalar sao processadores que tem mais de 1 pipeline, escalar tem apenas 1 pipeline
 
-Escalar sao os mais simples que executam um ou mais dados no maximo por vez
+Pipeline exemplo para 5 estágios: IF-(A)-ID-(B)-EX-(C)-MEM-(D)-WB
 
--Hazards e bolhas 
+1)Instruction fetch
+2)Instruction decode & register read
+3)Execute operation 
+4)Access memory operand
+5)Write back
+
+Pipeline registers:hold information produced in previous cycle
+A) IF/ID
+B) ID/EX
+C) EX/MEM
+D) MEM/WB
+
+
+-Hazards:conceitos
 
   a) Dados: Uma instrução precisa de um resultado que ainda não foi completamente calculado. ex:
   add t1, t2, t3
   add t5, t1, t4
-  O mecanismo para contornar isso é forwarding; Mandar o resultado da ALU assim que for computado.
-  O número de bolhas depende da distância entre as intruções e da quantidade de estágios entre o ponto em que o dado é
-  calculado e o ponto em que ele é requisitado.
+  O mecanismo para contornar isso é forwarding; 
+  Mandar o resultado da ALU assim que for computado através de conexões usando os pipeline registers
   
   b) Estrutural: Acesso a memória leva mais de 1 ciclo (dado não está no registrador ainda) e atrasa o pipeline.
   Mecanismo para contornar isso: caches
-  O número de bolhas depende dos cache misses.
   
   c) Controle: Um branch é executado e todo o progresso do pipeline deve ser descartado
   Mecanismo: branch prediction
-  O número de bolhas depende do estágio em que o branch é tomado.
+  
+  ##################################################################
+  ###IMPORTANTE :: O PROFESSOR PEDE PARA POR ISSO NO RELATORIO
+  ###identifiquem e listem todos os hazards a serem avaliados. Incluam uma descrição das condições em que cada hazard acontece
+  #####################################################################
+ -Lista de todos os hazards
+  
+  a)O número de bolhas depende da distância entre as intruções e da quantidade de estágios entre o ponto em que o dado é
+  calculado e o ponto em que ele é requisitado.(???)
+  
+  	*R-type instructions: não há bolhas, usa-se forwarding
+	*Load-Store L-type instructions: atraso de 1 bolha <=> L-type instruction e em seguinda uma instrução que usa registrador de destino da linha anterior
+  		ex.: 	lw **$s0**, 20($t1)
+  			sub $t2,**$so**,$t3
+  
+  b)O número de bolhas depende dos cache misses.
+
+  c)O número de bolhas depende do estágio em que o branch é tomado.
   
 Branch Prediction:
 
@@ -50,3 +79,12 @@ Dynamic Branch prediction:
 - Máquina de estados:
 
 	https://www.cs.umd.edu/class/fall2013/cmsc411-0201/lectures/lec09.pdf
+	
+	
+	Cáluclo da CPI:
+	
+
+    Status API Training Shop Blog About 
+
+    © 2016 GitHub, Inc. Terms Privacy Security Contact Help 
+
