@@ -72,7 +72,7 @@ Vamos analizar dois tipos de hazards:
 
 **Hazard de dados**
 Esse tipo de hazard ocorre quando temos instruções que dependem de dados de uma instrução anterior da pipeline. 
-Podemos resolver esse tipo de hazard com *forwarding*, contudo, existem alguns tipos de hazard em que *stalls* ocorrem mesmo com o uso de *forwarding*. Trataremos o caso dos ***Load-Use Data Hazard***[1] 
+Podemos resolver esse tipo de hazard com *forwarding*, contudo, existem alguns tipos de hazard em que *stalls* ocorrem mesmo com o uso de *forwarding*. Trataremos o caso dos ***Load-Use Data Hazard***[1] e dos ***Data hazards for Branches***.
 
 **Hazard de controle**
 
