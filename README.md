@@ -60,24 +60,99 @@ Utilizaremos o software dineroIV para medir os *misses* das caches L1 e L2. Modi
 ## **Processador**
 Vamos comparar dois tipos de processadores:
 
-* Escalar
-* Superescalar
+* Escalar : processadores com apenas 1 pipeline
+* Superescalar: processadores que tem mais de 1 pipeline
+
+Pipeline de 5 estágios no MIPS: 
+
+IF-(A)-ID-(B)-EX-(C)-MEM-(D)-WB
+
+Legenda:
+1)Instruction fetch
+2)Instruction decode & register read
+3)Execute operation 
+4)Access memory operand
+5)Write back
+
+Pipeline registers:guarda informação produzida no ciclo anterior
+A) IF/ID
+B) ID/EX
+C) EX/MEM
+D) MEM/WB
+
 
 A comparação será com base no número de ciclos que cada tipo de processador leva para executar os benchmarks.
 
 
 ## **Hazards**
 
+-Hazards:conceitos
+
+  a) Dados: Uma instrução precisa de um resultado que ainda não foi completamente calculado. ex:
+  add t1, t2, t3
+  add t5, t1, t4
+  Mecanismo para contornar isso:forwarding; 
+  Mandar o resultado da ALU assim que for computado através de conexões usando os pipeline registers
+  
+  b) Estrutural: há um conflito no uso de um recurso
+  	Exemplo: instruções do tipo L(load/store) exigem acesso a memória e causam conflito com o fetch de uma instrução
+  Mecanismo: cache de instruções e dados separados
+  
+  c) Controle: Um branch é executado e todo o progresso do pipeline deve ser descartado
+  Mecanismo: branch prediction
+  
+  
+  O número de bolhas depende dos cache misses.
+  
+  i)Se a instrução já estiver na Cache L1, não há penalidade
+  ii)Se a instrução não estiver na Cache L1, há penalidade de X1 ciclos para ir até a Cache L2.
+  iii)Se a instrução não estiver na Cache L2, há penalidade de X2 ciclos para ir buscar até a memória.
+  Supondo que há apenas uma memória que guardam tanto dados e instruções, quando há um acesso à memória por uma instrução do tipo L no quarto estágio do Pipeline (MEM), isso pode causar mais uma bolha para o fetch da instrução no primeiro estágio do Pipeline (IF).
+  Ou seja, deve-se esperar que o acesso a memória de outra instrução seja finalizado para poder buscar a instrução atual.
+  
 Vamos analizar dois tipos de hazards:
 
 **Hazard de dados**
 Esse tipo de hazard ocorre quando temos instruções que dependem de dados de uma instrução anterior da pipeline. 
+
 Podemos resolver esse tipo de hazard com *forwarding*, contudo, existem alguns tipos de hazard em que *stalls* ocorrem mesmo com o uso de *forwarding*. Trataremos o caso dos ***Load-Use Data Hazard***[1] e dos ***Data hazards for Branches***.
+
+Estes tipos de Hazard são os que envolvem (Load/Store) L-type instruction. Há atraso de 1 ciclo por meio de 1 *stall*. Ocorre quando L-type instruction aparece seguida de uma instrução que usa o registrador de destino da linha anterior.
+  		ex.: 	lw $s0, 20($t1)
+  			    sub $t2,$s0,$t3
+  			     # $s0 usado como registrador destino na primeira instrução e como operando na instrução seguinte 
+
+Desse modo, não há atrasos para o caso de Hazard de dados com instruções do tipo R.
+Para instruções do tipo Acesso à memória, há 1 ciclo de atraso.
+  	
+Trataremos o caso dos ***Load-Use Data Hazard***[1] 
 
 **Hazard de controle**
 
 São os hazards que ocorrem devido aos *branches*. Para estudar esse tipo de hazard, usaremos as diferentes estratégias de branch prediction descritas anteriormente. Quando ocorre um erro na predição do branch, as instruções que estavam na pipeline são perdidas, gerando bolhas na pipeline.
 
+O número de bolhas depende do estágio em que o branch é tomado.
+ex.:      add $4, $5 ,$6  
+          beq $1,$2,40
+          lw $3,300($0)
+
+linha 40: or $7,$8,$9
+
+- Prediction correct --> 0 bolhas
+- Prediction incorrect --> N bolhas
+Se não usar o branch prediction --> X bolhas 
+
+	--------------------------------------
+
+Static branch prediction:
+
+Escolhemos sempre NÃO tomar o branch
+
+Dynamic Branch prediction:
+
+- Máquina de estados:
+incluir aki link para a figura da maquina de estados
+- 
 ## **Experimentos**
 
 Utilizaremos as seguintes configurações do processador MIPS:
@@ -99,6 +174,11 @@ Utilizaremos as seguintes configurações do processador MIPS:
 | 11           | 4     | Superescalar | Nenhum            |
 
 * *todas as medidas  serão feitas tanto para pipelines de 5 e 7 estágios.*
+
+	
+	
+
+	
 
 
 
