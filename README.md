@@ -35,35 +35,7 @@ Todos os nossos experimentos e critérios avaliados serão feitos para pipelines
 
 Modificaremos o código do simulador para avaliar os efeitos da pipeline para cada estágio escolhido.
 
-
-## **Branch predictor**
-
-Utilizaremos as seguintes estratégias:
-
-* Branch estático: escolhemos sempre NÃO tomar o branch.
-* Branch dinâmico: 2-bit predictor. Cria uma máquina de estados e apenas muda a predição em duas predições errados consecutivas.
-
-## **Cache**
-Utilizaremos quatro configurações diferentes de cache L1 e L2 conforme tamanhos de caches utilizadas em processadores reais, são elas:
-
-
-| # | l1-usize | l1-ubsize | l1-uassoc | l2-usize | l2-ubsize | l2-uassoc | Replacement |
-|---|----------|-----------|-----------|----------|-----------|-----------|-------------|
-| 1 | 32KB     | 64B       | 2         | 256KB    | 64B       | 2         | LRU         |
-| 2 | 64KB     | 128B      | 2         | 256KB    | 64B       | 2         | LRU         |
-| 3 | 32KB     | 64B       | 2         | 512KB    | 128B      | 4         | LRU         |
-| 4 | 64KB     | 128B      | 2         | 512KB    | 128B      | 4         | LRU         |
-
-
-Utilizaremos o software dineroIV para medir os *misses* das caches L1 e L2. Modificaremos o simulador para gerar arquivos de saída no formato Dinero File Format.
-
-## **Processador**
-Vamos comparar dois tipos de processadores:
-
-* Escalar : processadores com apenas 1 pipeline
-* Superescalar: processadores que tem mais de 1 pipeline
-
-Pipeline de 5 estágios no MIPS: 
+**Pipeline de 5 estágios no MIPS** 
 
 IF-(A)-ID-(B)-EX-(C)-MEM-(D)-WB
 
@@ -80,13 +52,54 @@ B) ID/EX
 C) EX/MEM
 D) MEM/WB
 
+**Pipeline de 7 estágios no MIPS** [2]
+
+Todos os estágios da pipeline de 5 estágios estão presentes na pipeline de 7 estágios, porém os estágios IF e MEM são subdivididos em 2 estágios cada. IF1, IF2 e MEM1, MEM2.
+
+Pipeline registers:guarda informação produzida no ciclo anterior
+A) IF1/IF2
+B) IF2/ID
+C) ID/EX
+D) EX/MEM1
+E) MEM1/MEM2
+F) MEM2/WB
+
+
+## **Branch predictor**
+
+Utilizaremos as seguintes estratégias:
+
+* Branch estático: escolhemos sempre NÃO tomar o branch.
+* Branch dinâmico: 2-bit predictor. Cria uma máquina de estados e apenas muda a predição em duas predições errados consecutivas.
+
+## **Cache**
+Utilizaremos seis configurações diferentes de cache L1 e L2 conforme tamanhos de caches utilizadas em processadores reais, são elas:
+
+
+| # | l1-usize | l1-ubsize | l1-uassoc | l2-usize | l2-ubsize | l2-uassoc | Replacement |
+|---|----------|-----------|-----------|----------|-----------|-----------|-------------|
+| 1 | 32KB     | 64B       | 2         | 256KB    | 64B       | 2         | LRU         |
+| 2 | 64KB     | 128B      | 2         | 256KB    | 64B       | 2         | LRU         |
+| 3 | 32KB     | 64B       | 2         | 512KB    | 128B      | 4         | LRU         |
+| 4 | 64KB     | 128B      | 2         | 512KB    | 128B      | 4         | LRU         |
+| 5 | 64KB     | 128B      | 4         | 512KB    | 128B      | 4         | LRU         |
+| 6 | 64KB     | 128B      | 8         | 512KB    | 128B      | 8         | LRU         |
+
+
+Utilizaremos o software dineroIV para medir os *misses* das caches L1 e L2. Modificaremos o simulador para gerar arquivos de saída no formato Dinero File Format.
+
+## **Processador**
+Vamos comparar dois tipos de processadores:
+
+* Escalar : processadores com apenas 1 pipeline
+* Superescalar: processadores que tem mais de 1 pipeline
 
 A comparação será com base no número de ciclos que cada tipo de processador leva para executar os benchmarks.
 
 
 ## **Hazards**
 
--Hazards:conceitos
+-Hazards:conceitos (para pipeline de 5 estágios)
 
   a) Dados: Uma instrução precisa de um resultado que ainda não foi completamente calculado. ex:
   add t1, t2, t3
@@ -124,8 +137,32 @@ Estes tipos de Hazard são os que envolvem (Load/Store) L-type instruction. Há 
 
 Desse modo, não há atrasos para o caso de Hazard de dados com instruções do tipo R.
 Para instruções do tipo Acesso à memória, há 1 ciclo de atraso.
+
+Os Hazards de controle para branches ocorrem quando uma instrução branch utiliza um registrador que é alterado:
+
+- na ALU de uma instrução (após o estágio EX/MEM) precedente (insere 1 bolha)
+- por uma instrução load (após o estágio MEM_WB) precedente (insere 2 bolhas)
+- por uma instrução load (após o estágio MEM_WB) que precede a instrução de branch por 2 posições (insere 1 bolha)
   	
-Trataremos o caso dos ***Load-Use Data Hazard***[1] 
+Trataremos o caso dos ***Load-Use Data Hazard*** e dos hazards de controle para branches[1] 
+
+Para o caso das **pipelines de tamanho 7,** o que vai mudar é o número de bolhas inseridas caso ocorra um hazard de dados.
+Considere a tabela abaixo para as análises:
+
+| 1       | 2       | 3      | 4       | 5         | 6         | 7       |
+|---------|---------|--------|---------|-----------|-----------|---------|
+| IF1/IF2 | IF2/ID  | ID/EX  | EX/MEM1 | MEM1/MEM2 | MEM2/WB   |         |
+|         | IF1/IF2 | IF2/ID | ID/EX   | EX/MEM1   | MEM1/MEM2 | MEM2/WB |
+
+**Para o caso de load-use:**
+Resultado do load ocorre no final do estágio MEM2/WB e precisamos para o estágio EX (entre ID/EX e EX/MEM1), logo **2 bolhas** são necessárias.
+
+**Para o caso dos hazards de dados para banches:**
+No caso da instrução anterior ser uma instrução aritmética, o número de bolhas **continuará sendo 1** (já que precisamos da entrada de EX/MEM1 para a entrada de ID/EX)
+
+No caso da instrução anterior ser uma instrução de load, o número de bolhas será **3**. Final de MEM2/WB para inicio de ID/EX.
+
+No caso da instrução anterior da anterior ser uma instrução de load, o número de bolhas será **2**. Final de MEM2/WB para inicio de ID/EX.
 
 **Hazard de controle**
 
@@ -185,3 +222,4 @@ Utilizaremos as seguintes configurações do processador MIPS:
 
 ## **Referências**
 [1] [Slides professor Sandro. Capítulo 4](http://www.ic.unicamp.br/~sandro/cursos/mc722/2s2014/slides/Chapter_04.pdf)
+[2] [Implementation and Verification of a 7-Stage Pipeline Processor](http://publications.lib.chalmers.se/records/fulltext/215194/215194.pdf)

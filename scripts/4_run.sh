@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ## roda os simuladores para o benchmark criado
 
 export curr_dir=$(pwd);
@@ -21,19 +23,19 @@ export MIPS_SIM=/home/renan/semestre_13/mc723/mc723_proj2/mips-1.0.
 cd $MIPS_SIM_DIR;
 
 # patricia
-#$MIPSX --load=$PATRICIA $BENCHMARKS/network/patricia/small.udp;
+$MIPSX --load=$PATRICIA $BENCHMARKS/network/patricia/small.udp;
 #if [ $? -eq 0 ]; then
-   # mv -f traces/trace.txt $DINERO/trace_patricia.txt;
-    #mv -f results/result.txt $DINERO/results/result_patricia_sim.txt;
+    mv -f traces/trace.txt $DINERO/trace_patricia.txt;
+    mv -f results/result.txt $DINERO/results/result_patricia_sim.txt;
 #else
     #echo "Erro ao executar o mips para patricia!\n";
 #fi
 
 #qsort
-#$MIPSX --load=$QSORT $QSORT_DATA;
+$MIPSX --load=$QSORT $QSORT_DATA;
 #if [ $? -eq 0 ]; then
-   # mv -f traces/trace.txt $DINERO/trace_qsort.txt;
- #   mv -f results/result.txt $DINERO/results/result_qsort_sim.txt;
+    mv -f traces/trace.txt $DINERO/trace_qsort.txt;
+    mv -f results/result.txt $DINERO/results/result_qsort_sim.txt;
 #else
     #echo "Erro ao executar o mips para qsort!\n";
 #fi
