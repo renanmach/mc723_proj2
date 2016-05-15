@@ -113,7 +113,8 @@ unsigned long long DATA_HAZARDS_7 = 0;
 // Jumps are not decoded until ID 
 #define NBUBBLES_JUMP 1 
 
-#define NOT_USED_RD 999
+// Flag
+#define NOT_USED_REG 999
 
 
 // Branch Predictors
@@ -132,7 +133,8 @@ private:
     // FSM. [1] p. 92
     void twoBitsFSM(bool taken) {
         if(currState == 0) {
-            if(!taken) currState++;
+            if(!taken) 
+                currState=1;
         }
         
         else if(currState == 1) {
@@ -140,7 +142,7 @@ private:
             else currState++;
         }
         
-         if(currState == 2) {
+        else if(currState == 2) {
             if(taken) currState--;
             else currState++;
         }
@@ -148,6 +150,9 @@ private:
          else {
             if(taken) currState--;
         }
+        
+        if(currState < 0 || currState > 3)
+            fresults << "ERROR DYNAMIC BRANCH PREDICTOR. currState=" << currState << endl;
     }
     
 public:
@@ -164,11 +169,8 @@ public:
     // updates the prediction
     void updatePredict(bool taken) {
         twoBitsFSM(taken);
-        if(currState >= 2)
-            prediction = false;
-            
-        else
-            prediction = true;
+        if(currState >= 2) prediction = false;
+        else prediction = true;
     }
 };
 
@@ -186,19 +188,18 @@ public:
     unsigned int rt;
     unsigned int rs;
     unsigned int rd; 
-    //bool nop;
     bool memRead;
     bool branch;
     
     Instruction() {
-        //nop = false;
         memRead = false;
         branch = false;
-        rd = NOT_USED_RD;
+        rd = NOT_USED_REG;
+        rs = NOT_USED_REG;
+        rt = NOT_USED_REG;
     }
     
     Instruction(bool memRead1, bool branch1, unsigned int rd1, unsigned int rt1, unsigned int rs1) {
-        //nop = false;
         memRead = memRead1;
         branch = branch1;
         rd = rd1;
@@ -220,7 +221,7 @@ public:
         id_ex = if_id;
         if_id = inst;
         
-        void checkDataHazards();
+        checkDataHazards();
     }
 
 private:    
@@ -228,7 +229,7 @@ private:
     // be resolved by forwads.
     // We only need to check load-use hazards and data hazards for
     // branches.
-    void checkDataHazards() {
+    void checkDataHazards() {        
         // Load use
         if(id_ex.memRead) {
             if((id_ex.rt == if_id.rs) || (id_ex.rt == if_id.rt)) {
@@ -239,27 +240,27 @@ private:
         // data hazards for branches
         else if(id_ex.branch) {
             // load is the preceding branch instr
-            if(ex_mem.memRead) {
+            if(ex_mem.memRead && (ex_mem.rt != NOT_USED_REG)) {
                 if((id_ex.rt == ex_mem.rt) || (id_ex.rs == ex_mem.rt)) {
                     DATA_HAZARDS_5 += NBUBBLES_DATA_HAZ_LOAD_PREC_BRANCH_5;
                 } 
             }
             
             // load is the 2nd preceding branch instr
-            else if(mem_wb.memRead) {
+            else if(mem_wb.memRead && (mem_wb.rt != NOT_USED_REG)) {
                  if((id_ex.rt == mem_wb.rt) || (id_ex.rs == mem_wb.rt)) {
                      DATA_HAZARDS_5 += NBUBBLES_DATA_HAZ_LOAD_2_PREC_BRANCH_5;
                  }
             }
             
             // comparison register is a destination of preceding ALU instruction
-            else if(ex_mem.rd != NOT_USED_RD) {
+            else if(ex_mem.rd != NOT_USED_REG) {
                 if((id_ex.rt == ex_mem.rd) || (id_ex.rs == ex_mem.rd)) {
                     DATA_HAZARDS_5 += NBUBBLES_DATA_HAZ_ALU_PREC_BRANCH_5;
                 }
             }
             
-            else if(ex_mem.rt != NOT_USED_RD) {
+            else if(ex_mem.rt != NOT_USED_REG) {
                 if((id_ex.rt == ex_mem.rt) || (id_ex.rs == ex_mem.rt)) {
                     DATA_HAZARDS_5 += NBUBBLES_DATA_HAZ_ALU_PREC_BRANCH_5;
                 }
@@ -421,7 +422,7 @@ void ac_behavior( lb )
   // renan:
   file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
   
-  pl5.addInstruction(Instruction(true,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(true,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction lbu behavior method.
@@ -436,7 +437,7 @@ void ac_behavior( lbu )
     // renan:
     file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
     
-    pl5.addInstruction(Instruction(true,false,NOT_USED_RD,rt,rs));
+    pl5.addInstruction(Instruction(true,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction lh behavior method.
@@ -448,7 +449,7 @@ void ac_behavior( lh )
   RB[rt] = (ac_Sword)half ;
   dbg_printf("Result = %#x\n", RB[rt]);
   
-  pl5.addInstruction(Instruction(true,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(true,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction lhu behavior method.
@@ -462,7 +463,7 @@ void ac_behavior( lhu )
   // renan:
   file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
   
-  pl5.addInstruction(Instruction(true,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(true,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction lw behavior method.
@@ -475,7 +476,7 @@ void ac_behavior( lw )
   // renan:
   file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
   
-  pl5.addInstruction(Instruction(true,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(true,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction lwl behavior method.
@@ -496,7 +497,7 @@ void ac_behavior( lwl )
   // renan:
   file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
   
-  pl5.addInstruction(Instruction(true,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(true,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction lwr behavior method.
@@ -516,7 +517,7 @@ void ac_behavior( lwr )
   
     file << 0 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
     
-    pl5.addInstruction(Instruction(true,false,NOT_USED_RD,rt,rs));
+    pl5.addInstruction(Instruction(true,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction sb behavior method.
@@ -531,7 +532,7 @@ void ac_behavior( sb )
     // renan:
     file << 1 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
     
-    pl5.addInstruction(Instruction(false,false,NOT_USED_RD,rt,rs));
+    pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction sh behavior method.
@@ -546,7 +547,7 @@ void ac_behavior( sh )
   // renan:
   file << 1 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction sw behavior method.
@@ -559,7 +560,7 @@ void ac_behavior( sw )
   
   file << 1 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction swl behavior method.
@@ -580,7 +581,7 @@ void ac_behavior( swl )
     // renan:
     file << 1 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
     
-    pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+    pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction swr behavior method.
@@ -601,7 +602,7 @@ void ac_behavior( swr )
     // renan:
     file << 1 << " " << std::hex <<((RB[rs]+ imm)) << "\n";
     
-    pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+    pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction addi behavior method.
@@ -616,7 +617,7 @@ void ac_behavior( addi )
     fprintf(stderr, "EXCEPTION(addi): integer overflow.\n"); exit(EXIT_FAILURE);
   }
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction addiu behavior method.
@@ -626,7 +627,7 @@ void ac_behavior( addiu )
   RB[rt] = RB[rs] + imm;
   dbg_printf("Result = %#x\n", RB[rt]);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction slti behavior method.
@@ -641,7 +642,7 @@ void ac_behavior( slti )
     RB[rt] = 0;
   dbg_printf("Result = %#x\n", RB[rt]);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction sltiu behavior method.
@@ -656,7 +657,7 @@ void ac_behavior( sltiu )
     RB[rt] = 0;
   dbg_printf("Result = %#x\n", RB[rt]);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction andi behavior method.
@@ -666,7 +667,7 @@ void ac_behavior( andi )
   RB[rt] = RB[rs] & (imm & 0xFFFF) ;
   dbg_printf("Result = %#x\n", RB[rt]);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction ori behavior method.
@@ -676,7 +677,7 @@ void ac_behavior( ori )
   RB[rt] = RB[rs] | (imm & 0xFFFF) ;
   dbg_printf("Result = %#x\n", RB[rt]);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction xori behavior method.
@@ -686,7 +687,7 @@ void ac_behavior( xori )
   RB[rt] = RB[rs] ^ (imm & 0xFFFF) ;
   dbg_printf("Result = %#x\n", RB[rt]);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction lui behavior method.
@@ -699,7 +700,7 @@ void ac_behavior( lui )
   RB[rt] = imm << 16;
   dbg_printf("Result = %#x\n", RB[rt]);
   
-  pl5.addInstruction(Instruction(true,false,NOT_USED_RD,rt,rs));
+  pl5.addInstruction(Instruction(true,false,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction add behavior method.
@@ -825,7 +826,7 @@ void ac_behavior( nop )
 {  
   dbg_printf("nop\n");
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction sll behavior method.
@@ -909,8 +910,7 @@ void ac_behavior( mult )
 
   dbg_printf("Result = %#llx\n", result);
   
-  // NAO CONTA... CERTO? 
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,rs));
+  pl5.addInstruction(Instruction(false,false,hi,lo,rs));
 };
 
 //!Instruction multu behavior method.
@@ -934,7 +934,7 @@ void ac_behavior( multu )
 
   dbg_printf("Result = %#llx\n", result);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,hi,lo,NOT_USED_REG));
 };
 
 //!Instruction div behavior method.
@@ -946,7 +946,7 @@ void ac_behavior( div )
   // Register HI receives remainder
   hi = (ac_Sword) RB[rs] % (ac_Sword) RB[rt];
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,hi,lo,NOT_USED_REG));
 };
 
 //!Instruction divu behavior method.
@@ -958,7 +958,7 @@ void ac_behavior( divu )
   // Register HI receives remainder
   hi = RB[rs] % RB[rt];
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,hi,lo,NOT_USED_REG));
 };
 
 //!Instruction mfhi behavior method.
@@ -968,7 +968,7 @@ void ac_behavior( mfhi )
   RB[rd] = hi;
   dbg_printf("Result = %#x\n", RB[rd]);
   
-  pl5.addInstruction(Instruction(false,false,rd,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,rd,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction mthi behavior method.
@@ -978,7 +978,7 @@ void ac_behavior( mthi )
   hi = RB[rs];
   dbg_printf("Result = %#x\n", (unsigned int) hi);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction mflo behavior method.
@@ -988,7 +988,7 @@ void ac_behavior( mflo )
   RB[rd] = lo;
   dbg_printf("Result = %#x\n", RB[rd]);
   
-  pl5.addInstruction(Instruction(false,false,rd,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,rd,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction mtlo behavior method.
@@ -998,7 +998,7 @@ void ac_behavior( mtlo )
   lo = RB[rs];
   dbg_printf("Result = %#x\n", (unsigned int) lo);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction j behavior method.
@@ -1015,7 +1015,7 @@ void ac_behavior( j )
   // renan: Control Hazard... add bubbles
   NJUMPS++;
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction jal behavior method.
@@ -1035,7 +1035,7 @@ void ac_behavior( jal )
   dbg_printf("Target = %#x\n", (ac_pc & 0xF0000000) | addr );
   dbg_printf("Return = %#x\n", ac_pc+4);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction jr behavior method.
@@ -1049,7 +1049,7 @@ void ac_behavior( jr )
 #endif 
   dbg_printf("Target = %#x\n", RB[rs]);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 };
 
 //!Instruction jalr behavior method.
@@ -1069,7 +1069,7 @@ void ac_behavior( jalr )
   RB[rd] = ac_pc+4;
   dbg_printf("Return = %#x\n", ac_pc+4);
   
-  pl5.addInstruction(Instruction(false,false,rd,NOT_USED_RD,rs));
+  pl5.addInstruction(Instruction(false,false,rd,NOT_USED_REG,rs));
 };
 
 //!Instruction beq behavior method.
@@ -1095,15 +1095,15 @@ void ac_behavior( beq )
        BRANCHES_NOT_TAKEN++;
    }
   
-  dynamicBP.updatePredict(taken);
-  
   if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
   else DYNAMIC_MISSES++;
   
   if(staticBP.getPrediction() == taken) STATIC_HITS++;
   else STATIC_MISSES++;
   
-  pl5.addInstruction(Instruction(false,true,NOT_USED_RD,rt,rs));
+  dynamicBP.updatePredict(taken);
+  
+  pl5.addInstruction(Instruction(false,true,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction bne behavior method.
@@ -1128,15 +1128,15 @@ void ac_behavior( bne )
        BRANCHES_NOT_TAKEN++;
    }
   
-  dynamicBP.updatePredict(taken);
-  
   if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
   else DYNAMIC_MISSES++;
   
   if(staticBP.getPrediction() == taken) STATIC_HITS++;
   else STATIC_MISSES++;
   
-  pl5.addInstruction(Instruction(false,true,NOT_USED_RD,rt,rs));
+  dynamicBP.updatePredict(taken);
+  
+  pl5.addInstruction(Instruction(false,true,NOT_USED_REG,rt,rs));
 };
 
 //!Instruction blez behavior method.
@@ -1161,15 +1161,15 @@ void ac_behavior( blez )
        BRANCHES_NOT_TAKEN++;
    }
   
-  dynamicBP.updatePredict(taken);
-  
   if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
   else DYNAMIC_MISSES++;
   
   if(staticBP.getPrediction() == taken) STATIC_HITS++;
   else STATIC_MISSES++;
   
-  pl5.addInstruction(Instruction(false,true,NOT_USED_RD,NOT_USED_RD,rs));
+  dynamicBP.updatePredict(taken);
+  
+  pl5.addInstruction(Instruction(false,true,NOT_USED_REG,NOT_USED_REG,rs));
   
 };
 
@@ -1195,15 +1195,15 @@ void ac_behavior( bgtz )
        BRANCHES_NOT_TAKEN++;
    }
   
-  dynamicBP.updatePredict(taken);
-  
   if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
   else DYNAMIC_MISSES++;
   
   if(staticBP.getPrediction() == taken) STATIC_HITS++;
   else STATIC_MISSES++;
   
-  pl5.addInstruction(Instruction(false,true,NOT_USED_RD,NOT_USED_RD,rs));
+  dynamicBP.updatePredict(taken);
+  
+  pl5.addInstruction(Instruction(false,true,NOT_USED_REG,NOT_USED_REG,rs));
 };
 
 //!Instruction bltz behavior method.
@@ -1228,15 +1228,15 @@ void ac_behavior( bltz )
        BRANCHES_NOT_TAKEN++;
    }
   
-  dynamicBP.updatePredict(taken);
-  
   if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
   else DYNAMIC_MISSES++;
   
   if(staticBP.getPrediction() == taken) STATIC_HITS++;
   else STATIC_MISSES++;
   
-  pl5.addInstruction(Instruction(false,true,NOT_USED_RD,NOT_USED_RD,rs));
+  dynamicBP.updatePredict(taken);
+  
+  pl5.addInstruction(Instruction(false,true,NOT_USED_REG,NOT_USED_REG,rs));
 };
 
 //!Instruction bgez behavior method.
@@ -1261,15 +1261,15 @@ void ac_behavior( bgez )
        BRANCHES_NOT_TAKEN++;
    }
   
-  dynamicBP.updatePredict(taken);
-  
   if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
   else DYNAMIC_MISSES++;
   
   if(staticBP.getPrediction() == taken) STATIC_HITS++;
   else STATIC_MISSES++;
   
-  pl5.addInstruction(Instruction(false,true,NOT_USED_RD,NOT_USED_RD,rs));
+  dynamicBP.updatePredict(taken);
+  
+  pl5.addInstruction(Instruction(false,true,NOT_USED_REG,NOT_USED_REG,rs));
 };
 
 //!Instruction bltzal behavior method.
@@ -1295,17 +1295,17 @@ void ac_behavior( bltzal )
        BRANCHES_NOT_TAKEN++;
    }
   
-  dynamicBP.updatePredict(taken);
-  
   if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
   else DYNAMIC_MISSES++;
   
   if(staticBP.getPrediction() == taken) STATIC_HITS++;
   else STATIC_MISSES++;
   
+  dynamicBP.updatePredict(taken);
+  
   dbg_printf("Return = %#x\n", ac_pc+4);
   
-  pl5.addInstruction(Instruction(false,true,NOT_USED_RD,NOT_USED_RD,rs));
+  pl5.addInstruction(Instruction(false,true,NOT_USED_REG,NOT_USED_REG,rs));
 };
 
 //!Instruction bgezal behavior method.
@@ -1331,17 +1331,17 @@ void ac_behavior( bgezal )
        BRANCHES_NOT_TAKEN++;
    }
   
-  dynamicBP.updatePredict(taken);
-  
   if(dynamicBP.getPrediction() == taken) DYNAMIC_HITS++;
   else DYNAMIC_MISSES++;
   
   if(staticBP.getPrediction() == taken) STATIC_HITS++;
   else STATIC_MISSES++;
   
+  dynamicBP.updatePredict(taken);
+  
   dbg_printf("Return = %#x\n", ac_pc+4);
   
-  pl5.addInstruction(Instruction(false,true,NOT_USED_RD,NOT_USED_RD,rs));
+  pl5.addInstruction(Instruction(false,true,NOT_USED_REG,NOT_USED_REG,rs));
 };
 
 //!Instruction sys_call behavior method.
@@ -1350,7 +1350,7 @@ void ac_behavior( sys_call )
   dbg_printf("syscall\n");
   stop();
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 }
 
 //!Instruction instr_break behavior method.
@@ -1359,7 +1359,7 @@ void ac_behavior( instr_break )
   fprintf(stderr, "instr_break behavior not implemented.\n"); 
   exit(EXIT_FAILURE);
   
-  pl5.addInstruction(Instruction(false,false,NOT_USED_RD,NOT_USED_RD,NOT_USED_RD));
+  pl5.addInstruction(Instruction(false,false,NOT_USED_REG,NOT_USED_REG,NOT_USED_REG));
 }
 
 
