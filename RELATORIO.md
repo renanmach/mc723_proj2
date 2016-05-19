@@ -128,22 +128,35 @@ A comparação será com base no número de ciclos que cada tipo de processador 
 
 ### **Hazards**
 
+## **Hazards**
+
 -Hazards:conceitos (para pipeline de 5 estágios)
 
-  a) Dados: Uma instrução precisa de um resultado que ainda não foi completamente calculado. ex:
-  add t1, t2, t3
-  add t5, t1, t4
-  Mecanismo para contornar isso:forwarding; 
-  Mandar o resultado da ALU assim que for computado através de conexões usando os pipeline registers
+ *	Dados: uma instrução precisa de um resultado que ainda não foi completamente calculado. 
+  	Exemplo: registrador *t1* é usado na segunda instrução, mas resultado da soma da primeira instrução ainda não foi armazenado em t1.
+
+>	add $t1, $t2, $t3
+  	add $t5, $t1, $t4 	
   
-  b) Estrutural: há um conflito no uso de um recurso
-  	Exemplo: instruções do tipo L(load/store) exigem acesso a memória e causam conflito com o fetch de uma instrução
-  Mecanismo: cache de instruções e dados separados
+  *	Estrutural: há um conflito no uso de um recurso 
+  	Exemplo: instrução *ld* se encontra no estágio MEM do pipeline e tenta ler da memória um dado mas a instrução *mul* também tenta ser lido da memória para o estágio IF. ** NAO SEI SE O Q EU DISSE ESTA CERTO!!!!!!**
+
+>	ld $t1,20($s1)
+	add $t2,$t3,$t4
+	sub $t2,$t3,$t4
+	mul $t2,$t3,$t4
+
+  c) Controle: um branch é executado e todo o progresso do pipeline deve ser descartado.
+	Exemplo: se o resultado da comparação do *beq* no estágio EXE for igual, então o processador terá que descartar as instruções *add* e *sub* que já estavam nos estágios ID e IF, respectivamente, do pipeline para dar o fetch da instrução da linha 50.**NAO SEI SE O Q EU DISSE ESTA CERTO!!!!!!**
+	
+>	beq $t1,$t2,50
+	add $t2,$t3,$t4
+	sub $t2,$t3,$t4
   
-  c) Controle: Um branch é executado e todo o progresso do pipeline deve ser descartado
-  Mecanismo: branch prediction
- 
-Vamos analizar dois tipos de hazards:
+  
+--------------------------------------------------------------------------------------- 
+
+Dentre esses 3, vamos analizar apenas 2 tipos de hazards, o de dados e o de controle.
 
 **Hazard de dados**
 Esse tipo de hazard ocorre quando temos instruções que dependem de dados de uma instrução anterior da pipeline. 
@@ -190,15 +203,29 @@ O número de bolhas depende do estágio em que o branch é tomado.
 - Prediction correct --> 0 bolhas
 - Prediction incorrect --> 2 e 3 bolhas para pipelines de 5 e 7 estágios respectivamente.
 
-Static branch prediction:
+**Static branch prediction:**
 
 Escolhemos sempre não tomar o branch
 
-Dynamic Branch prediction:
+**Dynamic Branch prediction:**
 
-- Máquina de estados:
-incluir aki link para a figura da maquina de estados
-- 
+Implementamos o 2-bit predictor.
+
+Abaixo temos as seguintes combinações de bits:
+>	00 = fortemente não-tomada = processador assume que branch não é tomado
+	01 = fracamente não-tomada = processador assume que branch não é tomado
+	10 = fracamente tomado = processador assume que branch é tomado
+	11 = fortemente tomado = processador assume que branch é tomado
+	
+Desse modo, após o resultado de cada comparação de uma instrução branch, é atualizada a BHT, alterando-se em 1 bit. Isso significa que será necessário 2 branchs não-tomados (ou tomados) consecutivos para que o processador passe a prever diferente se o preditor está em um estado forte, e 1 missprediction se o preditor está no estado fraco.
+
+Assim, mesmo que uma branch seja incorretamente prevista, como no exemplo anterior dos 2 laços *for* aninhados, durante a saída do loop mais interno, na próxima branch provavelmente não será incorreta. Afinal, na BHT estará marcada *10*, que ainda assume que o branch será tomado.
+
+Inicialmente antes da execução da primeira branch, iremos assumir que o branch é fortemente tomado, ou seja, será setado em *00*.
+Segue abaixo uma imagem da máquina de estados descrita acima:
+
+
+
 ## **Experimentos**
 
 Utilizaremos as seguintes configurações do processador MIPS:
