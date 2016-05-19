@@ -224,7 +224,7 @@ Assim, mesmo que uma branch seja incorretamente prevista, como no exemplo anteri
 Inicialmente antes da execução da primeira branch, iremos assumir que o branch é fortemente tomado, ou seja, será setado em *00*.
 Segue abaixo uma imagem da máquina de estados descrita acima:
 
-
+![FSM](https://github.com/renanmach/mc723_proj2/blob/master/img/dynamicBP.png)
 
 ## **Experimentos**
 
