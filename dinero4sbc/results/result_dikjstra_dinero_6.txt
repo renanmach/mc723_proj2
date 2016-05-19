@@ -34,7 +34,7 @@
 ---Simulation begins.
 ---Simulation complete.
 l1-ucache
- Metrics		      Total	      Instrn	       Data	       Read	      Write	       Misc
+ Metrics		         Total	          Instrn	       Data	       Read	              Write	            Misc
  -----------------	      ------	      ------	      ------	      ------	      ------	      ------
  Demand Fetches		   286983351	   223690619	    63292732	    41860052	    21432680	           0
   Fraction of total	      1.0000	      0.7795	      0.2205	      0.1459	      0.0747	      0.0000
@@ -51,7 +51,7 @@ l1-ucache
  ( / Demand Fetches)	      0.0154
 
 l2-ucache
- Metrics		      Total	      Instrn	       Data	       Read	      Write	       Misc
+ Metrics		      Total	               Instrn	       Data	       Read	              Write	       Misc
  -----------------	      ------	      ------	      ------	      ------	      ------	      ------
  Demand Fetches		       34570	        7606	       26964	       22540	        4424	           0
   Fraction of total	      1.0000	      0.2200	      0.7800	      0.6520	      0.1280	      0.0000

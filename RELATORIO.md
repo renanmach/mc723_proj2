@@ -212,10 +212,13 @@ Escolhemos sempre não tomar o branch
 Implementamos o 2-bit predictor.
 
 Abaixo temos as seguintes combinações de bits:
->	00 = fortemente não-tomada = processador assume que branch não é tomado
-	01 = fracamente não-tomada = processador assume que branch não é tomado
-	10 = fracamente tomado = processador assume que branch é tomado
-	11 = fortemente tomado = processador assume que branch é tomado
+
+-	00 = fortemente não-tomada = processador assume que branch não é tomado
+-	01 = fracamente não-tomada = processador assume que branch não é tomado
+-	10 = fracamente tomado = processador assume que branch é tomado
+-	11 = fortemente tomado = processador assume que branch é tomado
+	
+	
 	
 Desse modo, após o resultado de cada comparação de uma instrução branch, é atualizada a BHT, alterando-se em 1 bit. Isso significa que será necessário 2 branchs não-tomados (ou tomados) consecutivos para que o processador passe a prever diferente se o preditor está em um estado forte, e 1 miss prediction se o preditor está no estado fraco.
 
@@ -290,6 +293,8 @@ As configurações 4, 5 e 6 apresentam os mesmos tamanhos de cache e blocos de c
 ### **Resultados processador escalar**
 
 Como dito na seção anterior, a cache escolhida foi a número 6:
+
+
 | # | l1-usize | l1-ubsize | l1-uassoc | l2-usize | l2-ubsize | l2-uassoc | Replacement |
 |---|----------|-----------|-----------|----------|-----------|-----------|-------------|
 | 6 | 64KB     | 128B      | 8         | 512KB    | 128B      | 8         | LRU         |
