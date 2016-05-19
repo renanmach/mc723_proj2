@@ -128,9 +128,7 @@ A comparação será com base no número de ciclos que cada tipo de processador 
 
 ### **Hazards**
 
-## **Hazards**
-
--Hazards:conceitos (para pipeline de 5 estágios)
+#### Conceitos (para pipeline de 5 estágios)
 
  *	Dados: uma instrução precisa de um resultado que ainda não foi completamente calculado. 
   	Exemplo: registrador *t1* é usado na segunda instrução, mas resultado da soma da primeira instrução ainda não foi armazenado em t1.
@@ -158,7 +156,7 @@ A comparação será com base no número de ciclos que cada tipo de processador 
 
 Dentre esses 3, vamos analizar apenas 2 tipos de hazards, o de dados e o de controle.
 
-**Hazard de dados**
+### **Hazard de dados**
 Esse tipo de hazard ocorre quando temos instruções que dependem de dados de uma instrução anterior da pipeline. 
 
 Podemos resolver esse tipo de hazard com *forwarding*, contudo, existem alguns tipos de hazard em que *stalls* ocorrem mesmo com o uso de *forwarding*. Trataremos o caso dos ***Load-Use Data Hazard***[1] e dos ***Data hazards for Branches***.
@@ -176,7 +174,9 @@ Os Hazards de controle para branches ocorrem quando uma instrução branch utili
   	
 Trataremos o caso dos ***Load-Use Data Hazard*** e dos hazards de controle para branches[1] 
 
-Para o caso das **pipelines de tamanho 7,** o que vai mudar é o número de bolhas inseridas caso ocorra um hazard de dados.
+#### **Pipelines 7 estágios** 
+
+O que vai mudar é o número de bolhas inseridas caso ocorra um hazard de dados.
 Considere a tabela abaixo para as análises:
 
 | 1       | 2       | 3      | 4       | 5         | 6         | 7       |
@@ -194,7 +194,7 @@ No caso da instrução anterior ser uma instrução de load, **o número de bolh
 
 No caso da instrução anterior da anterior ser uma instrução de load, **o número de bolhas será 2**. Final de MEM2/WB para inicio de ID/EX.
 
-**Hazard de controle**
+### **Hazard de controle**
 
 São os hazards que ocorrem devido aos *branches*. Para estudar esse tipo de hazard, usaremos as diferentes estratégias de branch prediction descritas anteriormente. Quando ocorre um erro na predição do branch, as instruções que estavam na pipeline são perdidas, gerando bolhas na pipeline.
 
@@ -226,36 +226,108 @@ Segue abaixo uma imagem da máquina de estados descrita acima:
 
 ![FSM](https://github.com/renanmach/mc723_proj2/blob/master/img/dynamicBP.png)
 
-## **Experimentos**
+#### Jumps
 
-Utilizaremos as seguintes configurações do processador MIPS:
-
-#### **Pipeline 5 e 7 estágios* **
-
-| Configuração | Cache | Tipo         | Branch prediction |
-|--------------|-------|--------------|-------------------|
-| 1            | 3     | Escalar      | Nenhum            |
-| 2            | 3     | Escalar      | Estático          |
-| 3            | 3     | Escalar      | Dinâmico          |
-| 4            | 1     | Escalar      | Estático          |
-| 5            | 2     | Escalar      | Estático          |
-| 6            | 4     | Escalar      | Nenhum            |
-| 7            | 1     | Escalar      | Dinâmico          |
-| 8            | 4     | Escalar      | Dinâmico          |
-| 9            | 4     | Superescalar | Dinâmico          |
-| 10           | 4     | Escalar      | Nenhum            |
-| 11           | 4     | Superescalar | Nenhum            |
-
-* *todas as medidas  serão feitas tanto para pipelines de 5 e 7 estágios.*
-
+Foi adicionada uma bolha para todas as intruções de jump para os dois tipos de pipeline.
 	
+## **Resultados**
 	
+### **Cache**
 
+#### **dijkstra(large)**:
+
+L1 Demand Fetches = 286983351 (para todos os casos)
+
+| Cache | L1 Demand Misses | L1 Miss rate | L2 Demand Fetches | L2 Demand Misses | L2 Miss rate |
+|-------|------------------|--------------|-------------------|------------------|--------------|
+| 1     | 365560           | 0.0013       | 396071            | 3763             | 0.0095       |
+| 2     | 56382            | 0.0002       | 127250            | 5736             | 0.0451       |
+| 3     | 365560           | 0.0013       | 396071            | 2244             | 0.0057       |
+| 4     | 56382            | 0.0002       | 63625             | 2250             | 0.0354       |
+| 5     | 36108            | 0.0001       | 39314             | 2251             | 0.0573       |
+| 6     | 30146            | 0.0001       | 34570             | 2141             | 0.0619       |
+
+
+#### **patricia(small)**:
 	
+L1 Demand Fetches = 286844071
+
+
+| Cache | L1 Demand Misses | L1 Miss rate | L2 Demand Fetches | L2 Demand Misses | L2 Miss rate |
+|-------|------------------|--------------|-------------------|------------------|--------------|
+| 1     | 3487811          | 0.0122       | 3679521           | 67213            | 0.0183       |
+| 2     | 802317           | 0.0028       | 1685216           | 124516           | 0.0739       |
+| 3     | 3487811          | 0.0122       | 3679521           | 25559            | 0.0069       |
+| 4     | 802317           | 0.0028       | 842608            | 25825            | 0.0306       |
+| 5     | 346215           | 0.0012       | 360271            | 25722            | 0.0714       |
+| 6     | 153961           | 0.0005       | 161701            | 21213            | 0.1312       |
+
+
+#### **qsort(large)**:
+	
+L1 Demand Fetches = 276655813
+
+| Cache | L1 Demand Misses | L1 Miss rate | L2 Demand Fetches | L2 Demand Misses | L2 Miss rate |
+|-------|------------------|--------------|-------------------|------------------|--------------|
+| 1     | 157063           | 0.0006       | 178782            | 16541            | 0.0925       |
+| 2     | 24003            | 0.0001       | 67224             | 28128            | 0.4184       |
+| 3     | 157063           | 0.0006       | 178782            | 12812            | 0.0717       |
+| 4     | 24003            | 0.0001       | 33612             | 12807            | 0.3810       |
+| 5     | 20415            | 0.0001       | 29173             | 12805            | 0.4389       |
+| 6     | 20264            | 0.0001       | 28945             | 12841            | 0.4436       |
+
+#### Análise
+
+Considerando apenas a cache L1, notamos uma diferença expressiva ao dobrar o tamanho da cache unificada e do tamanho do bloco unificado. Por exemplo, para o benchmark dijkstra, para as configurações 1 e 3 o L1 miss rate foi de 0.0013, enquanto que para as configuracões 2 e 4 (o dobro do tamanho da cache L1), o miss rate foi de apenas 0.0002.
+
+As configurações 4, 5 e 6 apresentam os mesmos tamanhos de cache e blocos de cache tanto para L1 quanto para L2, mudando a associatividade das caches. Resolvemos escolher a **configuração 6** da cache para continuar a análise dos resultados devido a um menor número de misses na cache L2 comparado as outras configurações (com exceção do benchmark qsort). Como os misses na cache L2 implicam que o processador deve buscar o dado na memória RAM e a memória RAM apresenta uma penalidade bem maior do que as caches, é interessante minimizar o número de acessos a memória.
+
+### **Resultados processador escalar**
+
+Como dito na seção anterior, a cache escolhida foi a número 6:
+| # | l1-usize | l1-ubsize | l1-uassoc | l2-usize | l2-ubsize | l2-uassoc | Replacement |
+|---|----------|-----------|-----------|----------|-----------|-----------|-------------|
+| 6 | 64KB     | 128B      | 8         | 512KB    | 128B      | 8         | LRU         |
+
+Com o número de misses e hits para essa configuração montamos a tabela a seguir:
+
+Legenda:
+P1: Dijkstra(large)
+P2: Patricia(small)
+P3: Qsort(large)
+BP: Branch Predictor
+CH5: Control Hazards pipeline 5 stages
+DH5: Data Hazards pipeline 5 stages
+CH7: Control Hazards pipeline 7 stages
+DH7: Data Hazards pipeline 7 stages
+
+
+| Medida                  | BP Estático | BP Estático | BP Estático | BP Dinâmico | BP Dinâmico | BP Dinâmico |
+|-------------------------|-------------|-------------|-------------|-------------|-------------|-------------|
+|                         | P1          | P2          | P3          | P1          | P2          | P3          |
+| Instruções              | 223690619   | 225953174   | 217701256   | 223690619   | 225953174   | 217701256   |
+| Instruções Jump         | 8039342     | 2801415     | 2754523     | 8039342     | 2801415     | 2754523     |
+| Instruções Branch       | 41909437    | 24202475    | 23022724    | 41909437    | 24202475    | 23022724    |
+| BP Hits                 | 23953352    | 12632075    | 10987129    | 32906998    | 15672745    | 14153446    |
+| BP Misses               | 17956085    | 11570400    | 12035595    | 9002439     | 8529730     | 8869278     |
+| BP Misses/Instr Branch  | 0.42845     | 0.478067    | 0.52277     | 0.214807    | 0.352432    | 0.38524     |
+| CH5 (bolhas)            | 43951512    | 25942215    | 26825713    | 26044220    | 19860875    | 20493079    |
+| DH5 (bolhas)            | 34935445    | 17053222    | 17607900    | 34935445    | 17053222    | 17607900    |
+| CH7 (bolhas)            | 61907597    | 37512615    | 20493079    | 35046659    | 28390605    | 29362357    |
+| DH7 (bolhas)            | 61267042    | 23389183    | 23848560    | 61267042    | 23389183    | 23848560    |
+| L1 Hit Penalty (bolhas) |             |             |             |             |             |             |
+| L2 Hit Penalty          |             |             |             |             |             |             |
+| RAM Hit Penalty         |             |             |             |             |             |             |
+| Ciclos 5 Estágios       |             |             |             |             |             |             |
+| CPI 5 Estágios          |             |             |             |             |             |             |
+| Tempo 5 Estágios        |             |             |             |             |             |             |
+| Ciclos 7 Estágios       |             |             |             |             |             |             |
+| CPI 7 Estágios          |             |             |             |             |             |             |
+| Tempo 7 Estágios        |             |             |             |             |             |             |
 
 
 
 
-## **Referências**
+### **Referências**
 [1] [Slides professor Sandro. Capítulo 4](http://www.ic.unicamp.br/~sandro/cursos/mc722/2s2014/slides/Chapter_04.pdf)
 [2] [Implementation and Verification of a 7-Stage Pipeline Processor](http://publications.lib.chalmers.se/records/fulltext/215194/215194.pdf)
