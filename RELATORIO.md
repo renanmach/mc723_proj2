@@ -117,14 +117,15 @@ O número de ciclos adicionados considerando a cache está na tabela abaixo*:
   O número de bolhas depende dos cache misses.
   
 
-### **Processador**    **<<<<<<<<<< ALGUEM VAI FAZER ISSO? APAGAR SE NAO FIZEREM**
+### **Processador**   
 Vamos comparar dois tipos de processadores:
 
 * Escalar : processadores com apenas 1 pipeline
-* Superescalar: processadores que tem mais de 1 pipeline
+* Superescalar: processadores que tem mais de 1 pipeline, no nosso caso 2 pipelines(2-way superscalar)
 
 A comparação será com base no número de ciclos que cada tipo de processador leva para executar os benchmarks.
-
+Sabemos que os processadores super escalar amplificam a penalidade dos stalls.
+Porém, para instruções que são indenpendentes entre si, a execução em paralela leva a uma economia de ciclos, pois instruções são executadas em paralelo no mesmo ciclo.
 
 ### **Hazards**
 
@@ -137,7 +138,7 @@ A comparação será com base no número de ciclos que cada tipo de processador 
   	add $t5, $t1, $t4 	
   
   *	Estrutural: há um conflito no uso de um recurso 
-  	Exemplo: instrução *ld* se encontra no estágio MEM do pipeline e tenta ler da memória um dado mas a instrução *mul* também tenta ser lido da memória para o estágio IF. ** NAO SEI SE O Q EU DISSE ESTA CERTO!!!!!!**
+  	Exemplo: instrução *ld* se encontra no estágio MEM do pipeline e tenta ler da memória um dado mas a instrução *mul* também tenta ser lido da memória para o estágio IF.
 
 >	ld $t1,20($s1)
 	add $t2,$t3,$t4
@@ -145,7 +146,7 @@ A comparação será com base no número de ciclos que cada tipo de processador 
 	mul $t2,$t3,$t4
 
   c) Controle: um branch é executado e todo o progresso do pipeline deve ser descartado.
-	Exemplo: se o resultado da comparação do *beq* no estágio EXE for igual, então o processador terá que descartar as instruções *add* e *sub* que já estavam nos estágios ID e IF, respectivamente, do pipeline para dar o fetch da instrução da linha 50.**NAO SEI SE O Q EU DISSE ESTA CERTO!!!!!!**
+	Exemplo: se o resultado da comparação do *beq* no estágio EXE for igual, então o processador terá que descartar as instruções *add* e *sub* que já estavam nos estágios ID e IF, respectivamente, do pipeline para dar o fetch da instrução da linha 50.
 	
 >	beq $t1,$t2,50
 	add $t2,$t3,$t4
@@ -193,6 +194,39 @@ No caso da instrução anterior ser uma instrução aritmética, o número de bo
 No caso da instrução anterior ser uma instrução de load, **o número de bolhas será 3**. Final de MEM2/WB para inicio de ID/EX.
 
 No caso da instrução anterior da anterior ser uma instrução de load, **o número de bolhas será 2**. Final de MEM2/WB para inicio de ID/EX.
+
+#### **2-way superpipeline 5 estágios** 
+O que vai mudar não é só o número de bolhas inseridas como também os casos, quando ocorrer um hazard de dados.
+Considere a tabela abaixo para as análises:
+
+| 1       | 2       | 3      | 4       | 5         |
+|---------|---------|--------|---------|-----------|
+| IF/ID   | ID/EX   | EX/MEM | MEM/WB  |	   |  A
+| IF/ID   | ID/EX   | EX/MEM | MEM/WB  |           |  B
+|         | IF/ID   | ID/EX  | EX/MEM  | MEM/WB    |  A
+|         | IF/ID   | ID/EX  | EX/MEM  | MEM/WB    |  B
+
+**Para o caso de load-use:**
+De modo similar ao *Pipeline de 5 estágios*, esse tipo de hazard é o que envolve (Load/Store) L-type instruction. 
+Isso ocorre quando L-type instruction aparece seguida de uma instrução que usa o registrador de destino da linha anterior. Porém, como há 2 pipelines, o L-type instrucion pode aparecer tanto no estágio EX/MEM do pipeline A quanto no pipeline B1 Desse modo, deve-se verificar se tanto a instrução no estágio ID/EX do pipeline A quanto do pipeline B usa um dos registradores destino da L-type Instruction. Nesse caso, insere-se 1 bolha a mais.
+
+**Para o caso de instruções em gerais em pipelines em paralelo**
+Pode ocorrer de que quaisquer instruções, seja do tipo R ou do tipo L , possam causar um Hazard de dados. Isto é, como temos 2 pipelines em paralelo, em um mesmo estágio pode ocorre esse Hazard quando a instrução do pipeline A dependa do registrador destino da instrução do pipeline B, ou vice-versa. 
+
+Para 2 instruções do tipo R, isso ocorre no estágio ID/EX, pois ainda não foi armazenado no registrador o valor da operação na ALU para a instrução em paralelo poder usar. Insere-se 1 bolha a mais.
+
+Para 2 instruções do tipo L, isso ocorre no estágio EX/MEM, pois ainda não foi escrito no registrador o valor acessado da memória que vai ser utilizado pela instrução em paralelo como endereço base para também acessar da memória. Insere-se 1 bolha a mais.
+
+Para 1 instrução do tipo L e outra do tipo R, insere-se 2 bolhas a mais. Para esse caso, como ambas as instruções estão no mesmo estágio, então para que a instrução tipo R consiga usar o registrador destino da outra instrução, este terá que ficar estacionado no estágio ID/EX enquanto a instrução L deve avançar até MEM/WB, e isso são 2 ciclos a mais.
+
+De forma geral, temos 3 tipos de dependências:
+
+*	True Data dependecies: read after write
+Um conflito de recursos,
+
+*	Output dependecies: write after write
+
+*	Anti-dependencies: write after read
 
 ### **Hazard de controle**
 
